@@ -29,7 +29,7 @@ export class CarsController {
 
     @Delete(':id')
     deleteCars( @Param('id', new ParseUUIDPipe({ version: '4'})) id: string) {
-        return id;
+        return this.carsService.delete(id);
     }
 
     @Patch(':id')
