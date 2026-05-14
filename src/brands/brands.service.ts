@@ -42,16 +42,13 @@ export class BrandsService {
   update(id: string, updateBrandDto: UpdateBrandDto) {
     let brandDB = this.findOneById(id);
 
-    this.brands = this.brands.map(car => {
-        if (car.id == id){
-            brandDB = {
-                ...brandDB,
-                ...updateBrandDto,
-                id
-            }
+    this.brands = this.brands.map(brand => {
+        if (brand.id == id){
+            brandDB.updateAt = new Date().getTime();
+            brandDB = { ...brandDB, ...updateBrandDto}
             return brandDB;
         }
-        return car;
+        return brand;
     } );
     return brandDB; 
 
