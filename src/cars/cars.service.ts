@@ -1,66 +1,100 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'crypto';
 
-import { Car } from './interfaces/car.interface';
 import { CreateCarDto, UpdateCarDto } from './dtos';
+import { Car } from './interfaces/car.interface';
 
 @Injectable()
 export class CarsService {
-    private cars : Car[] = [
-        { id: uuid(), brand: 'Toyota', model: 'Corolla' },
-        { id: uuid(), brand: 'Honda', model: 'Civic' },
-        { id: uuid(), brand: 'Ford', model: 'Focus' },
-        { id: uuid(), brand: 'Chevrolet', model: 'Cruze' },
-        { id: uuid(), brand: 'Nissan', model: 'Sentra' },
-        { id: uuid(), brand: 'Mazda', model: 'Mazda 3' },
-        { id: uuid(), brand: 'Hyundai', model: 'Elantra' },
-        { id: uuid(), brand: 'Kia', model: 'Forte' },
-        { id: uuid(), brand: 'Volkswagen', model: 'Jetta' },
-        { id: uuid(), brand: 'Subaru', model: 'Impreza' }
-    ];
+  private cars: Car[] = [
+    {
+      id: randomUUID(),
+      plate: 'ABC123',
+      ownerName: 'Laura Gomez',
+      ownerPhone: '3001234567',
+      brand: 'Toyota',
+      model: 'Corolla',
+      color: 'Blanco',
+    },
+    {
+      id: randomUUID(),
+      plate: 'MNO456',
+      ownerName: 'Carlos Ruiz',
+      ownerPhone: '3109876543',
+      brand: 'Mazda',
+      model: 'CX-30',
+      color: 'Gris',
+    },
+  ];
 
-    findAll(){
-        return this.cars;
+  findAll() {
+    return this.cars;
+  }
+
+  findOneById(id: string) {
+    const car = this.cars.find((car) => car.id === id);
+    if (!car) throw new NotFoundException(`Vehicle with id ${id} not found`);
+    return car;
+  }
+
+  create(createCarDto: CreateCarDto) {
+    const plate = createCarDto.plate.trim().toUpperCase();
+    const plateExists = this.cars.some((car) => car.plate === plate);
+
+    if (plateExists) {
+      throw new BadRequestException(`Vehicle with plate ${plate} already exists`);
     }
 
-    findOneById(id){
-        const car = this.cars.find(car => car.id == id);
-        if( !car ) throw new NotFoundException(`Car with id ${id} not found`);
-        return car
-    }
-    create( createCarDto: CreateCarDto){
+    const car: Car = {
+      id: randomUUID(),
+      ...createCarDto,
+      plate,
+    };
 
-        const brand = createCarDto.brand;
-        const model = createCarDto.model;
-        const car = {id: uuid(), brand, model}
-        this.cars.push(car)
-        console.log(this.cars)
-        this
-        return car;
-    }
-    update(id:string, updateCarDto: UpdateCarDto){
-        let carDB = this.findOneById(id);
+    this.cars.push(car);
+    return car;
+  }
 
-        if (updateCarDto.id && updateCarDto.id != id)
-            throw new BadRequestException('Car id is not valid inside body');
+  update(id: string, updateCarDto: UpdateCarDto) {
+    let carDB = this.findOneById(id);
 
-        this.cars = this.cars.map(car => {
-            if (car.id == id){
-                carDB = {
-                    ...carDB,
-                    ...updateCarDto,
-                    id
-                }
-                return carDB;
-            }
-            return car;
-        } );
-        return carDB;   
+    if (updateCarDto.id && updateCarDto.id !== id) {
+      throw new BadRequestException('Vehicle id is not valid inside body');
     }
-    delete(id:string){
-        const car = this.findOneById(id);
 
-        this.cars = this.cars.filter(car => car.id !== id)
-        return this.cars;
+    if (updateCarDto.plate) {
+      const plate = updateCarDto.plate.trim().toUpperCase();
+      const plateExists = this.cars.some((car) => car.id !== id && car.plate === plate);
+
+      if (plateExists) {
+        throw new BadRequestException(`Vehicle with plate ${plate} already exists`);
+      }
+
+      updateCarDto = { ...updateCarDto, plate };
     }
+
+    this.cars = this.cars.map((car) => {
+      if (car.id === id) {
+        carDB = {
+          ...carDB,
+          ...updateCarDto,
+          id,
+        };
+        return carDB;
+      }
+      return car;
+    });
+
+    return carDB;
+  }
+
+  delete(id: string) {
+    this.findOneById(id);
+    this.cars = this.cars.filter((car) => car.id !== id);
+    return this.cars;
+  }
+
+  setVehicles(cars: Car[]) {
+    this.cars = cars;
+  }
 }

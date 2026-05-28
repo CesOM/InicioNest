@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import {v4 as uuid} from 'uuid'
+import { randomUUID } from 'crypto';
 
 import { Brand } from './entities/brand.entity';
 
@@ -12,7 +12,7 @@ export class BrandsService {
 
   private brands: Brand[] =[
     {
-      id: uuid(),
+      id: randomUUID(),
       name: 'Toyota',
       createAt: new Date().getTime()
     }
@@ -20,7 +20,7 @@ export class BrandsService {
   create(createBrandDto: CreateBrandDto) {
     const { name } = createBrandDto;
     const brand:  Brand ={
-      id: uuid(),
+      id: randomUUID(),
       name: name.toLocaleLowerCase(),
       createAt: new Date().getTime(),
     }
